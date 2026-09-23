@@ -62,16 +62,28 @@ export class OltsService {
   async pollOlt(id: string) { 
     const olt = await this.prisma.olt.findUnique({
       where: { id },
-      include: { device: true }
+      include: { 
+        device: {
+          include: { credential: true }
+        } 
+      }
     });
     
     if (!olt) throw new Error('OLT not found');
 
-    const driver = this.driverFactory.createOltDriver(olt.device.vendor || 'zte', olt.device.model || '', true);
+    // Remove the mock override: pass false for useMock
+    const driver = this.driverFactory.createOltDriver(olt.device.vendor || 'zte', olt.device.model || '', false);
     
-    await driver.connect({ ip: olt.device.ipAddress });
+    const creds = olt.device.credential || {};
+    
+    await driver.connect({ 
+      ip: olt.device.ipAddress,
+      sshUsername: creds.sshUsernameEnc, 
+      sshPassword: creds.sshPasswordEnc,
+      sshPort: creds.sshPort || 22,
+    });
 
-    // Mock Polling for demonstration
+    // Poll live data from the OLT via SSH/SNMP
     const ports = await driver.getPonPorts();
     
     // Clear old data

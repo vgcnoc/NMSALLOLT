@@ -68,11 +68,13 @@ export class ZteDriver implements OLTDriver {
   async getPonPorts(): Promise<any[]> {
     try {
       const output = await this.sshEngine.executeCommand('show pon interface');
-      // Dummy parsing
-      return [
-        { slot: 1, port: 1, status: 'up' },
-        { slot: 1, port: 2, status: 'down' },
-      ];
+      const ports = [];
+      const regex = /gpon-olt_\d+\/(\d+)\/(\d+)\s+(\S+)\s+(\S+)/gi;
+      let match;
+      while ((match = regex.exec(output)) !== null) {
+        ports.push({ slot: match[1], port: match[2], adminState: match[3], status: match[4] });
+      }
+      return ports;
     } catch (error) {
       this.logger.error(`Error getting PON ports: ${error.message}`);
       return [];
@@ -81,10 +83,16 @@ export class ZteDriver implements OLTDriver {
 
   async getOnus(ponSlot: number, ponPort: number): Promise<any[]> {
     try {
-      const output = await this.sshEngine.executeCommand(`show pon onu interface gpon-olt_1/${ponSlot}/${ponPort}`);
-      return [
-        { id: 1, sn: 'ZTEG12345678', status: 'online' },
-      ];
+      // Often you use "show gpon onu state gpon-olt_1/x/y" to get SN and status
+      const output = await this.sshEngine.executeCommand(`show gpon onu state gpon-olt_1/${ponSlot}/${ponPort}`);
+      const onus = [];
+      // Example output: gpon-onu_1/1/1:1   ZTEG12345678  working
+      const regex = new RegExp(`gpon-onu_\\d+\\/${ponSlot}\\/${ponPort}:(\\d+)\\s+(\\w+)\\s+(\\w+)`, 'gi');
+      let match;
+      while ((match = regex.exec(output)) !== null) {
+        onus.push({ id: match[1], sn: match[2], status: match[3] });
+      }
+      return onus;
     } catch (error) {
       this.logger.error(`Error getting ONUs: ${error.message}`);
       return [];
@@ -94,7 +102,12 @@ export class ZteDriver implements OLTDriver {
   async getOpticalPower(ponSlot: number, ponPort: number, onuId: number): Promise<any> {
     try {
       const output = await this.sshEngine.executeCommand(`show pon onu optical-info gpon-onu_1/${ponSlot}/${ponPort}:${onuId}`);
-      return { rx: -15, tx: 2 };
+      const rxMatch = output.match(/Rx optical power.*:\s*(-?\d+\.\d+)/i);
+      const txMatch = output.match(/Tx optical power.*:\s*(-?\d+\.\d+)/i);
+      return { 
+        rx: rxMatch ? parseFloat(rxMatch[1]) : null, 
+        tx: txMatch ? parseFloat(txMatch[1]) : null 
+      };
     } catch (error) {
       this.logger.error(`Error getting optical power: ${error.message}`);
       return { rx: null, tx: null };
