@@ -17,8 +17,8 @@ export class EponWebDriver implements OLTDriver {
       baseURL: `http://${credentials.ip}${credentials.sshPort ? ':' + credentials.sshPort : ''}`,
       timeout: 10000,
       auth: {
-        username: credentials.sshUsername || 'admin',
-        password: credentials.sshPassword || 'admin',
+        username: credentials.apiUsername || credentials.sshUsername || 'admin',
+        password: credentials.apiPassword || credentials.sshPassword || 'admin',
       },
     });
 

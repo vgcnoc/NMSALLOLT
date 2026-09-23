@@ -81,6 +81,8 @@ export class OltsService {
       sshUsername: creds.sshUsernameEnc, 
       sshPassword: creds.sshPasswordEnc,
       sshPort: creds.sshPort || 22,
+      apiUsername: creds.apiUsernameEnc,
+      apiPassword: creds.apiPasswordEnc,
     });
 
     // Poll live data from the OLT via SSH/SNMP

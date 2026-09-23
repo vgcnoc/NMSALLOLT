@@ -75,6 +75,7 @@ export function AddDeviceDialog({ open, onOpenChange }: AddDeviceDialogProps) {
                   <SelectContent>
                     <SelectItem value="ZTE">ZTE</SelectItem>
                     <SelectItem value="HUAWEI">Huawei</SelectItem>
+                    <SelectItem value="EPON">EPON (Web)</SelectItem>
                     <SelectItem value="MIKROTIK">MikroTik</SelectItem>
                     <SelectItem value="OTHER">Other</SelectItem>
                   </SelectContent>

@@ -19,7 +19,7 @@ export interface PaginatedResponse<T> {
 // Enums as string unions
 export type DeviceType = 'OLT' | 'MIKROTIK' | 'ROUTER' | 'SWITCH' | 'ACCESS_POINT';
 export type DeviceStatus = 'ONLINE' | 'OFFLINE' | 'WARNING' | 'MAINTENANCE' | 'UNKNOWN';
-export type DeviceVendor = 'ZTE' | 'HUAWEI' | 'CDATA' | 'HSGQ' | 'HISFOCUS' | 'VSOL' | 'MIKROTIK' | 'OTHER';
+export type DeviceVendor = 'ZTE' | 'HUAWEI' | 'CDATA' | 'HSGQ' | 'HISFOCUS' | 'VSOL' | 'MIKROTIK' | 'EPON' | 'OTHER';
 export type AlarmSeverity = 'CRITICAL' | 'MAJOR' | 'WARNING' | 'INFO';
 export type AlarmStatus = 'NEW' | 'ACKNOWLEDGED' | 'RESOLVED';
 export type OnuStatus = 'ONLINE' | 'OFFLINE' | 'LOS' | 'DYING_GASP' | 'UNKNOWN';
