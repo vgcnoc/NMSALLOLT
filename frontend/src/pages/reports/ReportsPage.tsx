@@ -1,0 +1,1 @@
+import React from 'react'; import PageHeader from '@/components/common/PageHeader'; import EmptyState from '@/components/common/EmptyState'; export default function ReportsPage() { return <div className="p-6"><PageHeader title="Reports" /><EmptyState title="Coming in Phase X" /></div>; }

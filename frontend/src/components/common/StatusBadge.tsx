@@ -1,0 +1,2 @@
+import React from 'react'; export function StatusBadge({ status }: { status: string }) { const colors: Record<string, string> = { ONLINE: "bg-emerald-500", OFFLINE: "bg-destructive", WARNING: "bg-amber-500", LOS: "bg-destructive animate-pulse", DYING_GASP: "bg-orange-500", MAINTENANCE: "bg-blue-500", UNKNOWN: "bg-gray-500" }; return <div className="flex items-center gap-2"><span className={"h-2 w-2 rounded-full " + (colors[status] || colors.UNKNOWN)} />{status}</div>; }
+export default StatusBadge;

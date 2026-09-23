@@ -1,0 +1,1 @@
+import { apiClient } from './client'; export const getAlarms = () => apiClient.get('/alarms');

@@ -1,0 +1,1 @@
+import React from 'react'; export default function AlarmBanner({ count }: { count: number }) { if(!count) return null; return <div className="bg-destructive text-destructive-foreground px-4 py-2 text-sm text-center font-semibold">WARNING: {count} Active Critical Alarms</div>; }

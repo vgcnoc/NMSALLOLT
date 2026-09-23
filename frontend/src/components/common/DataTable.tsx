@@ -1,0 +1,2 @@
+import React from 'react'; import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'; export function DataTable({ data, columns }: any) { return <Table><TableHeader><TableRow>{columns?.map((c:any, i:number) => <TableHead key={i}>{c.header}</TableHead>)}</TableRow></TableHeader><TableBody>{data?.map((row:any, i:number) => <TableRow key={i}>{columns?.map((c:any, j:number) => <TableCell key={j}>{row[c.accessorKey]}</TableCell>)}</TableRow>)}</TableBody></Table>; }
+export default DataTable;

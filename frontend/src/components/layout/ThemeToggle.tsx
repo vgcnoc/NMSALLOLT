@@ -1,0 +1,1 @@
+import React from 'react'; import { useThemeStore } from '@/stores/theme.store'; export default function ThemeToggle() { const toggle = useThemeStore((s:any)=>s.toggleTheme); return <button onClick={toggle}>Toggle Theme</button>; }

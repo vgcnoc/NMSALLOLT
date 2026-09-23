@@ -1,0 +1,1 @@
+import { create } from 'zustand'; import { persist } from 'zustand/middleware'; export const useSidebarStore = create()(persist((set) => ({ isCollapsed: false, toggle: () => set((state:any) => ({ isCollapsed: !state.isCollapsed })), setCollapsed: (val:boolean) => set({ isCollapsed: val }) }), { name: 'sidebar-store' }));

@@ -1,0 +1,1 @@
+import React from 'react'; import PageHeader from '@/components/common/PageHeader'; export default function UsersPage() { return <div className="p-6"><PageHeader title="Users Management" /><div>Content...</div></div>; }

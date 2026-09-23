@@ -1,0 +1,13 @@
+export const API_BASE_URL = '/api/v1';
+
+export const POLLING_INTERVALS = {
+  DASHBOARD: 60000,
+  ALARMS: 30000,
+  DEVICES: 120000,
+  DEVICE_DETAIL: 15000,
+};
+
+export const PAGINATION_DEFAULTS = {
+  PAGE_SIZE: 50,
+  PAGE_INDEX: 0,
+};

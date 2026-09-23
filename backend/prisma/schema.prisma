@@ -1,0 +1,408 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(uuid()) @db.Uuid
+  name         String
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  isActive     Boolean   @default(true) @map("is_active")
+  lastLogin    DateTime? @map("last_login")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  roles         UserRole[]
+  auditLogs     AuditLog[]
+  alarmsAcked   Alarm[]    @relation("UserAlarmsAcknowledged")
+
+  @@map("users")
+}
+
+model Role {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  users       UserRole[]
+  permissions RolePermission[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id     String @id @default(uuid()) @db.Uuid
+  code   String @unique
+  name   String
+  module String
+
+  roles RolePermission[]
+
+  @@map("permissions")
+}
+
+model UserRole {
+  userId String @map("user_id") @db.Uuid
+  roleId String @map("role_id") @db.Uuid
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+  @@map("user_roles")
+}
+
+model RolePermission {
+  roleId       String @map("role_id") @db.Uuid
+  permissionId String @map("permission_id") @db.Uuid
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model Pop {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String
+  code        String   @unique
+  address     String?
+  latitude    Decimal? @db.Decimal(10, 8)
+  longitude   Decimal? @db.Decimal(11, 8)
+  region      String?
+  description String?
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  devices      Device[]
+  networkNodes NetworkNode[]
+
+  @@map("pops")
+}
+
+model Device {
+  id              String    @id @default(uuid()) @db.Uuid
+  name            String
+  type            String
+  vendor          String?
+  model           String?
+  ipAddress       String    @map("ip_address")
+  managementIp    String?   @map("management_ip")
+  port            Int?
+  serialNumber    String?   @map("serial_number")
+  firmwareVersion String?   @map("firmware_version")
+  status          String    @default("UNKNOWN")
+  popId           String?   @map("pop_id") @db.Uuid
+  latitude        Decimal?  @db.Decimal(10, 8)
+  longitude       Decimal?  @db.Decimal(11, 8)
+  description     String?
+  metadata        Json?
+  lastSeen        DateTime? @map("last_seen")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  pop        Pop?              @relation(fields: [popId], references: [id], onDelete: SetNull)
+  credential DeviceCredential?
+  interfaces DeviceInterface[]
+  olt        Olt?
+  mikrotik   Mikrotik?
+  alarms     Alarm[]
+  linksAsSrc NetworkLink[]     @relation("SourceDevice")
+  linksAsTgt NetworkLink[]     @relation("TargetDevice")
+
+  @@index([ipAddress])
+  @@index([serialNumber])
+  @@index([status])
+  @@map("devices")
+}
+
+model DeviceCredential {
+  id                 String   @id @default(uuid()) @db.Uuid
+  deviceId           String   @unique @map("device_id") @db.Uuid
+  protocol           String
+  snmpVersion        String?  @map("snmp_version")
+  snmpCommunityEnc   String?  @map("snmp_community_enc")
+  snmpUsernameEnc    String?  @map("snmp_username_enc")
+  snmpAuthPasswordEnc String? @map("snmp_auth_password_enc")
+  snmpPrivPasswordEnc String? @map("snmp_priv_password_enc")
+  snmpAuthProtocol   String?  @map("snmp_auth_protocol")
+  snmpPrivProtocol   String?  @map("snmp_priv_protocol")
+  sshUsernameEnc     String?  @map("ssh_username_enc")
+  sshPasswordEnc     String?  @map("ssh_password_enc")
+  sshPort            Int      @default(22) @map("ssh_port")
+  apiUsernameEnc     String?  @map("api_username_enc")
+  apiPasswordEnc     String?  @map("api_password_enc")
+  apiPort            Int?     @map("api_port")
+  apiUseSsl          Boolean  @default(false) @map("api_use_ssl")
+  encryptionIv       String   @map("encryption_iv")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@map("device_credentials")
+}
+
+model DeviceInterface {
+  id          String   @id @default(uuid()) @db.Uuid
+  deviceId    String   @map("device_id") @db.Uuid
+  name        String
+  type        String?
+  status      String?
+  speed       BigInt?
+  macAddress  String?  @map("mac_address")
+  description String?
+  ifIndex     Int?     @map("if_index")
+  metadata    Json?
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@map("device_interfaces")
+}
+
+model Olt {
+  id               String   @id @default(uuid()) @db.Uuid
+  deviceId         String   @unique @map("device_id") @db.Uuid
+  oltType          String?  @map("olt_type")
+  totalPonPorts    Int?     @map("total_pon_ports")
+  totalBoards      Int?     @map("total_boards")
+  softwareVersion  String?  @map("software_version")
+  hardwareVersion  String?  @map("hardware_version")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  device   Device       @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  boards   OltBoard[]
+  ponPorts OltPonPort[]
+  onus     Onu[]
+
+  @@map("olts")
+}
+
+model OltBoard {
+  id              String   @id @default(uuid()) @db.Uuid
+  oltId           String   @map("olt_id") @db.Uuid
+  slot            Int
+  boardType       String?  @map("board_type")
+  status          String?
+  serialNumber    String?  @map("serial_number")
+  hardwareVersion String?  @map("hardware_version")
+  softwareVersion String?  @map("software_version")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  olt Olt @relation(fields: [oltId], references: [id], onDelete: Cascade)
+
+  @@map("olt_boards")
+}
+
+model OltPonPort {
+  id          String   @id @default(uuid()) @db.Uuid
+  oltId       String   @map("olt_id") @db.Uuid
+  slot        Int
+  port        Int
+  name        String?
+  status      String?
+  totalOnus   Int      @default(0) @map("total_onus")
+  onlineOnus  Int      @default(0) @map("online_onus")
+  ponType     String?  @map("pon_type")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  olt  Olt   @relation(fields: [oltId], references: [id], onDelete: Cascade)
+  onus Onu[]
+
+  @@map("olt_pon_ports")
+}
+
+model Onu {
+  id             String    @id @default(uuid()) @db.Uuid
+  oltId          String    @map("olt_id") @db.Uuid
+  ponPortId      String    @map("pon_port_id") @db.Uuid
+  onuId          Int       @map("onu_id")
+  serialNumber   String?   @map("serial_number")
+  loid           String?
+  vendor         String?
+  model          String?
+  firmware       String?
+  status         String    @default("UNKNOWN")
+  macAddress     String?   @map("mac_address")
+  ipAddress      String?   @map("ip_address")
+  vlan           Int?
+  description    String?
+  rxPower        Decimal?  @map("rx_power") @db.Decimal(10, 2)
+  txPower        Decimal?  @map("tx_power") @db.Decimal(10, 2)
+  temperature    Decimal?  @db.Decimal(10, 2)
+  distance       Decimal?  @db.Decimal(10, 2)
+  oltRxPower     Decimal?  @map("olt_rx_power") @db.Decimal(10, 2)
+  lastOnline     DateTime? @map("last_online")
+  lastOffline    DateTime? @map("last_offline")
+  uptimeSeconds  BigInt?   @map("uptime_seconds")
+  metadata       Json?
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  olt     Olt        @relation(fields: [oltId], references: [id], onDelete: Cascade)
+  ponPort OltPonPort @relation(fields: [ponPortId], references: [id], onDelete: Cascade)
+
+  @@index([serialNumber])
+  @@index([status])
+  @@map("onus")
+}
+
+model Mikrotik {
+  id              String   @id @default(uuid()) @db.Uuid
+  deviceId        String   @unique @map("device_id") @db.Uuid
+  routerosVersion String?  @map("routeros_version")
+  boardName       String?  @map("board_name")
+  architecture    String?
+  apiProtocol     String   @default("API") @map("api_protocol")
+  apiPort         Int      @default(8728) @map("api_port")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@map("mikrotiks")
+}
+
+model NetworkNode {
+  id           String   @id @default(uuid()) @db.Uuid
+  name         String
+  type         String
+  latitude     Decimal  @db.Decimal(10, 8)
+  longitude    Decimal  @db.Decimal(11, 8)
+  address      String?
+  parentNodeId String?  @map("parent_node_id") @db.Uuid
+  popId        String?  @map("pop_id") @db.Uuid
+  status       String   @default("ACTIVE")
+  metadata     Json?
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  parentNode  NetworkNode?  @relation("NodeToNode", fields: [parentNodeId], references: [id])
+  childNodes  NetworkNode[] @relation("NodeToNode")
+  pop         Pop?          @relation(fields: [popId], references: [id], onDelete: SetNull)
+  routesAsSrc FiberRoute[]  @relation("RouteSourceNode")
+  routesAsTgt FiberRoute[]  @relation("RouteTargetNode")
+
+  @@map("network_nodes")
+}
+
+model NetworkLink {
+  id             String   @id @default(uuid()) @db.Uuid
+  sourceDeviceId String   @map("source_device_id") @db.Uuid
+  targetDeviceId String   @map("target_device_id") @db.Uuid
+  linkType       String?  @map("link_type")
+  status         String?
+  description    String?
+  geometry       Json?
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  sourceDevice Device @relation("SourceDevice", fields: [sourceDeviceId], references: [id], onDelete: Cascade)
+  targetDevice Device @relation("TargetDevice", fields: [targetDeviceId], references: [id], onDelete: Cascade)
+
+  @@map("network_links")
+}
+
+model FiberRoute {
+  id           String   @id @default(uuid()) @db.Uuid
+  name         String
+  fiberType    String?  @map("fiber_type")
+  totalLengthKm Decimal? @map("total_length_km") @db.Decimal(10, 3)
+  sourceNodeId String   @map("source_node_id") @db.Uuid
+  targetNodeId String   @map("target_node_id") @db.Uuid
+  geometry     Json?
+  status       String?
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  sourceNode NetworkNode @relation("RouteSourceNode", fields: [sourceNodeId], references: [id], onDelete: Cascade)
+  targetNode NetworkNode @relation("RouteTargetNode", fields: [targetNodeId], references: [id], onDelete: Cascade)
+
+  @@map("fiber_routes")
+}
+
+model Alarm {
+  id               String    @id @default(uuid()) @db.Uuid
+  deviceId         String    @map("device_id") @db.Uuid
+  severity         String
+  alarmType        String    @map("alarm_type")
+  message          String
+  status           String    @default("NEW")
+  acknowledgedById String?   @map("acknowledged_by_id") @db.Uuid
+  acknowledgedAt   DateTime? @map("acknowledged_at")
+  resolvedAt       DateTime? @map("resolved_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+
+  device         Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  acknowledgedBy User?  @relation("UserAlarmsAcknowledged", fields: [acknowledgedById], references: [id], onDelete: SetNull)
+
+  @@map("alarms")
+}
+
+model AlarmRule {
+  id                   String   @id @default(uuid()) @db.Uuid
+  name                 String
+  conditionType        String   @map("condition_type")
+  deviceType           String?  @map("device_type")
+  metricName           String?  @map("metric_name")
+  operator             String?
+  threshold            Decimal? @db.Decimal(10, 2)
+  severity             String
+  isActive             Boolean  @default(true) @map("is_active")
+  notificationChannels Json?    @map("notification_channels")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  @@map("alarm_rules")
+}
+
+model NotificationChannel {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  type      String
+  configEnc Json?    @map("config_enc")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("notification_channels")
+}
+
+model AuditLog {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String?  @map("user_id") @db.Uuid
+  action       String
+  resourceType String?  @map("resource_type")
+  resourceId   String?  @map("resource_id")
+  ipAddress    String?  @map("ip_address")
+  userAgent    String?  @map("user_agent")
+  details      Json?
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("audit_logs")
+}
+
+model GenieacsConfig {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String
+  url         String
+  usernameEnc String?  @map("username_enc")
+  passwordEnc String?  @map("password_enc")
+  timeout     Int      @default(5000)
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("genieacs_configs")
+}

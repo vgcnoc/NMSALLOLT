@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: timescale/timescaledb:latest-pg16
+    environment:
+      POSTGRES_DB: ${DB_NAME:-nms_db}
+      POSTGRES_USER: ${DB_USER:-nms_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-nms_password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - nms_network
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    networks:
+      - nms_network
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      - NODE_ENV=production
+      - APP_PORT=3000
+      - DATABASE_URL=postgresql://${DB_USER:-nms_user}:${DB_PASSWORD:-nms_password}@postgres:5432/${DB_NAME:-nms_db}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - JWT_SECRET=${JWT_SECRET:-super_secret_jwt_key_change_in_prod}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET:-super_secret_refresh_key_change_in_prod}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef}
+      - FRONTEND_URL=http://localhost
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+    networks:
+      - nms_network
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - nms_network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  nms_network:
+    driver: bridge
