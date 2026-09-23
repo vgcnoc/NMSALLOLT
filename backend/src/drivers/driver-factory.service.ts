@@ -4,6 +4,7 @@ import { HuaweiDriver } from './olt/huawei.driver';
 import { CdataDriver } from './olt/cdata.driver';
 import { GenericDriver } from './olt/generic.driver';
 import { MockOltDriver } from './mock/mock-olt.driver';
+import { EponWebDriver } from './olt/epon-web.driver';
 import { OLTDriver } from './interfaces/olt-driver.interface';
 import { RouterDriver } from './interfaces/router-driver.interface';
 import { MikrotikDriver } from './router/mikrotik.driver';
@@ -18,6 +19,7 @@ export class DriverFactory {
     private readonly cdataDriver: CdataDriver,
     private readonly genericDriver: GenericDriver,
     private readonly mockDriver: MockOltDriver,
+    private readonly eponWebDriver: EponWebDriver,
     private readonly mikrotikDriver: MikrotikDriver,
   ) {}
 
@@ -39,6 +41,13 @@ export class DriverFactory {
       case 'c-data':
         this.logger.log('Returning C-Data OLT Driver');
         return this.cdataDriver;
+      case 'epon':
+      case 'hsgq':
+      case 'vsol':
+      case 'v-sol':
+      case 'epon-web':
+        this.logger.log('Returning EPON Web OLT Driver');
+        return this.eponWebDriver;
       default:
         this.logger.log(`Returning Generic OLT Driver for unknown vendor: ${vendor}`);
         return this.genericDriver;
