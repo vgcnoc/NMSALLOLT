@@ -61,21 +61,7 @@ export default function OltsPage() {
         </Link>
       ),
     },
-    { 
-      accessorKey: 'device.ipAddress', 
-      header: 'IP / Web Access',
-      cell: ({ row }: any) => {
-        const ip = row.original.device.ipAddress;
-        if (!ip) return '-';
-        const url = ip.startsWith('http') ? ip : `http://${ip}`;
-        return (
-          <a href={url} target="_blank" rel="noreferrer" className="text-primary hover:underline flex items-center gap-1">
-            {ip}
-            <Eye className="h-3 w-3 opacity-50" />
-          </a>
-        );
-      }
-    },
+    { accessorKey: 'device.ipAddress', header: 'IP Address' },
     { accessorKey: 'device.vendor', header: 'Vendor' },
     { accessorKey: 'device.model', header: 'Model' },
     { accessorKey: 'totalPonPorts', header: 'PON Ports' },
@@ -86,16 +72,27 @@ export default function OltsPage() {
     },
     {
       id: 'actions',
-      cell: ({ row }: any) => (
-        <div className="flex space-x-2">
-          <Button variant="ghost" size="sm" onClick={() => navigate(`/olts/${row.original.id}`)}>
-            <Eye className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" size="sm">
-            <RefreshCw className="h-4 w-4" />
-          </Button>
-        </div>
-      ),
+      cell: ({ row }: any) => {
+        const handleSync = async () => {
+          try {
+            await oltsApi.poll(row.original.id);
+            alert('OLT data synced successfully!');
+            // Ideally trigger a re-fetch, but for now just alert
+          } catch (e) {
+            alert('Failed to sync OLT data.');
+          }
+        };
+        return (
+          <div className="flex space-x-2">
+            <Button variant="ghost" size="sm" onClick={() => navigate(`/olts/${row.original.id}`)}>
+              <Eye className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="sm" onClick={handleSync} title="Sync Live Data from OLT">
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+          </div>
+        );
+      },
     },
   ];
 

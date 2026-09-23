@@ -40,15 +40,25 @@ export default function OltDetailPage() {
 
   return (
     <div className="space-y-6 p-4 max-w-7xl mx-auto">
-      <div className="flex items-center space-x-4">
-        <Button variant="outline" size="icon" onClick={() => navigate('/olts')}><ArrowLeft className="h-4 w-4" /></Button>
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">{olt.device.name}</h1>
-          <div className="flex items-center space-x-2 mt-1">
-            <StatusBadge status={olt.device.status} />
-            <span className="text-muted-foreground text-sm">{olt.device.ipAddress}</span>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <Button variant="outline" size="icon" onClick={() => navigate('/olts')}><ArrowLeft className="h-4 w-4" /></Button>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">{olt.device.name}</h1>
+            <div className="flex items-center space-x-2 mt-1">
+              <StatusBadge status={olt.device.status} />
+              <span className="text-muted-foreground text-sm">{olt.device.ipAddress}</span>
+            </div>
           </div>
         </div>
+        <Button onClick={async () => {
+          try {
+            await oltsApi.poll(id!);
+            alert('Synced successfully. Please refresh the page to see new data.');
+          } catch(e) {
+            alert('Failed to sync.');
+          }
+        }}>Sync Live Data</Button>
       </div>
 
       <Tabs defaultValue="overview" className="w-full">
@@ -70,8 +80,10 @@ export default function OltDetailPage() {
         <TabsContent value="onus">
           <DataTable columns={[
             { accessorKey: 'serialNumber', header: 'SN' },
+            { accessorKey: 'macAddress', header: 'MAC Address' },
             { accessorKey: 'status', header: 'Status', cell: ({ row }: any) => <StatusBadge status={row.original.status} /> },
-            { accessorKey: 'rxPower', header: 'RX Power', cell: ({ row }: any) => <span className={row.original.rxPower < -27 ? 'text-red-500' : 'text-green-500'}>{row.original.rxPower} dBm</span> }
+            { accessorKey: 'rxPower', header: 'RX Power', cell: ({ row }: any) => <span className={row.original.rxPower < -27 ? 'text-red-500' : 'text-green-500'}>{row.original.rxPower} dBm</span> },
+            { accessorKey: 'txPower', header: 'TX Power', cell: ({ row }: any) => <span>{row.original.txPower} dBm</span> }
           ]} data={onusData?.data || []} />
         </TabsContent>
       </Tabs>

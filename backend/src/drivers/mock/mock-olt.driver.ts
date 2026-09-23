@@ -30,8 +30,11 @@ export class MockOltDriver implements OLTDriver {
     return ports;
   }
 
-  async getOnus(port: string): Promise<ONUInfo[]> {
-    return [{ onuId: '1', serialNumber: 'ZTEG' + Math.floor(Math.random()*100000000).toString(), status: 'online' }];
+  async getOnus(slot: number | string, port: number | string): Promise<any[]> {
+    return [
+      { id: 1, sn: 'ZTEG' + Math.floor(Math.random()*10000).toString(), status: 'online', mac: 'E0:67:B3:' + Math.floor(Math.random()*99).toString() + ':00:11' },
+      { id: 2, sn: 'ZTEG' + Math.floor(Math.random()*10000).toString(), status: 'offline', mac: 'E0:67:B3:' + Math.floor(Math.random()*99).toString() + ':22:33' }
+    ];
   }
   
   async getOnuDetail(onuId: string): Promise<any> { return {}; }

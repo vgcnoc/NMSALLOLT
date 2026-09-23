@@ -12,17 +12,17 @@ export class OltsController {
   findOne(@Param('id') id: string) { return this.oltsService.findOne(id); }
   
   @Get(':id/boards')
-  getBoards(@Param('id') id: string) { return this.oltsService.getBoards(+id); }
+  getBoards(@Param('id') id: string) { return this.oltsService.getBoards(id); }
   
   @Get(':id/pon-ports')
-  getPonPorts(@Param('id') id: string) { return this.oltsService.getPonPorts(+id); }
+  getPonPorts(@Param('id') id: string) { return this.oltsService.getPonPorts(id); }
   
   @Get(':id/onus')
-  getOnus(@Param('id') id: string) { return this.oltsService.getOnus(+id); }
+  getOnus(@Param('id') id: string) { return this.oltsService.getOnus(id); }
   
   @Get(':id/alarms')
-  getAlarms(@Param('id') id: string) { return this.oltsService.getAlarms(+id); }
+  getAlarms(@Param('id') id: string) { return this.oltsService.getAlarms(id); }
   
   @Post(':id/poll')
-  pollOlt(@Param('id') id: string) { return this.oltsService.pollOlt(+id); }
+  pollOlt(@Param('id') id: string) { return this.oltsService.pollOlt(id); }
 }
