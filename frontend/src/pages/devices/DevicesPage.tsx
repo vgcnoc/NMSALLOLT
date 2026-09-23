@@ -89,7 +89,21 @@ export default function DevicesPage() {
         </Link>
       ),
     },
-    { accessorKey: 'ipAddress', header: 'IP Address' },
+    { 
+      accessorKey: 'ipAddress', 
+      header: 'IP / Web Access',
+      cell: ({ row }: any) => {
+        const ip = row.original.ipAddress;
+        if (!ip) return '-';
+        const url = ip.startsWith('http') ? ip : `http://${ip}`;
+        return (
+          <a href={url} target="_blank" rel="noreferrer" className="text-primary hover:underline flex items-center gap-1">
+            {ip}
+            <Eye className="h-3 w-3 opacity-50" />
+          </a>
+        );
+      }
+    },
     { accessorKey: 'vendor', header: 'Vendor' },
     { accessorKey: 'model', header: 'Model' },
     {

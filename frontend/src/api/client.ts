@@ -18,4 +18,12 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+api.interceptors.response.use((response) => {
+  // Unwrap the global backend response format: { success: true, data: ... }
+  if (response.data && response.data.success !== undefined && response.data.data !== undefined) {
+    response.data = response.data.data;
+  }
+  return response;
+});
+
 export const apiClient = api;

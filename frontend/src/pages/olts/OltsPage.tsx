@@ -61,7 +61,21 @@ export default function OltsPage() {
         </Link>
       ),
     },
-    { accessorKey: 'device.ipAddress', header: 'IP Address' },
+    { 
+      accessorKey: 'device.ipAddress', 
+      header: 'IP / Web Access',
+      cell: ({ row }: any) => {
+        const ip = row.original.device.ipAddress;
+        if (!ip) return '-';
+        const url = ip.startsWith('http') ? ip : `http://${ip}`;
+        return (
+          <a href={url} target="_blank" rel="noreferrer" className="text-primary hover:underline flex items-center gap-1">
+            {ip}
+            <Eye className="h-3 w-3 opacity-50" />
+          </a>
+        );
+      }
+    },
     { accessorKey: 'device.vendor', header: 'Vendor' },
     { accessorKey: 'device.model', header: 'Model' },
     { accessorKey: 'totalPonPorts', header: 'PON Ports' },
